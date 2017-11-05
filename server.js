@@ -13,6 +13,8 @@ var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
     mongoURL = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGO_URL,
     mongoURLLabel = "";
 
+console.log('[debug]DATABASE_SERVICE_NAME: ', DATABASE_SERVICE_NAME, mongoURL)
+
 if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
     var mongoServiceName = process.env.DATABASE_SERVICE_NAME.toUpperCase(),
 	mongoHost = process.env[mongoServiceName + '_SERVICE_HOST'],
@@ -29,9 +31,9 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 	// Provide UI label that excludes user id and pw
 	mongoURLLabel += mongoHost + ':' + mongoPort + '/' + mongoDatabase;
 	mongoURL += mongoHost + ':' +  mongoPort + '/' + mongoDatabase;
-	console.log('[debug] mongoURL: ', mongoURL)
     }
 }
+
 var db = null,
     dbDetails = new Object();
 
