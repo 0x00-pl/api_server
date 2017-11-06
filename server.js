@@ -32,6 +32,7 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 	mongoURLLabel += mongoHost + ':' + mongoPort + '/' + mongoDatabase;
 	mongoURL += mongoHost + ':' +  mongoPort + '/' + mongoDatabase;
     }
+    console.log('[debug]mongoURL: ', mongoURL)
 }
 
 var db = null,
