@@ -1,7 +1,9 @@
 //  OpenShift sample Node application
-var express = require('express'),
-    app     = express(),
-    morgan  = require('morgan');
+var express   = require('express'),
+    app       = express(),
+    morgan    = require('morgan'),
+    form_data = require('form-data'),
+    fetch     = require('node-fetch');
 
 Object.assign=require('object-assign')
 
@@ -81,6 +83,30 @@ app.get('/', function (req, res) {
 
 app.get('/env', function (req, res) {
     res.json(process.env)
+})
+
+
+let client_id = 'b61534ffae79fb8f0326'
+let client_secret = 'd24e78554f5fe66ba06565355ff24279c251c973'
+app.get('/oauth0', function (req, res) {
+    res.redirect('https://github.com/login/oauth/authorize?client_id='+client_id)
+})
+
+
+app.get('/oauth1', function (req, res) {
+    console.log(req.originalUrl)
+    let [a, code] = req.originalUrl.split('code=')
+    
+    let form = new form_data();
+    form.append('client_id', client_id);
+    form.append('client_secret', client_secret);
+    form.append('code', code);
+    fetch('https://github.com/login/oauth/access_token', {method: 'POST', headers: {'Accept': 'application/json'}, body: form})
+	.then(b=>b.json())
+	.then(j=>{
+	    let token = 'encoded:'+j.access_token
+	    res.send('saving token: '+token)
+	})
 })
 
 app.get('/pagecount', function (req, res) {
