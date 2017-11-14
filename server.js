@@ -9,13 +9,15 @@ Object.assign=require('object-assign')
 
 app.engine('html', require('ejs').renderFile);
 app.use(morgan('combined'))
+let {client_id, client_secret} = process.env['OAUTH_CLIENT_ID'] ?
+    {client_id: process.env['OAUTH_CLIENT_ID'], client_secret: process.env['OAUTH_CLIENT_SECRET'] } :
+    require('./oauth-conf')
 
 var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
     ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
     mongoURL = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGO_URL,
     mongoURLLabel = "";
 
-console.log('[debug]DATABASE_SERVICE_NAME: ', process.env.DATABASE_SERVICE_NAME, mongoURL)
 
 if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
     var mongoServiceName = process.env.DATABASE_SERVICE_NAME.toUpperCase(),
@@ -86,8 +88,6 @@ app.get('/env', function (req, res) {
 })
 
 
-let client_id = 'b61534ffae79fb8f0326'
-let client_secret = 'd24e78554f5fe66ba06565355ff24279c251c973'
 app.get('/oauth0', function (req, res) {
     res.redirect('https://github.com/login/oauth/authorize?client_id='+client_id)
 })
