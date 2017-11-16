@@ -3,6 +3,9 @@ var server   = require('../server'),
     chaiHTTP = require('chai-http'),
     should   = chai.should();
 
+process.env['OAUTH_CLIENT_ID'] = 'testingId'
+process.env['OAUTH_CLIENT_SECRET'] = 'testingSecret'
+
 chai.use(chaiHTTP);
 
 reqServer = process.env.HTTP_TEST_SERVER || server
