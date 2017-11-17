@@ -13,7 +13,8 @@
     "mongodb": "^2.1.16",
     "morgan": "^1.7.0",
     "node-fetch": "^1.7.3",
-    "object-assign": "4.1.0"
+    "object-assign": "4.1.0",
+    "object.entries": "^1.0.4"
   },
   "engine": {
     "node": "*",

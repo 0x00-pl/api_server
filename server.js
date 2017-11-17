@@ -3,14 +3,15 @@ var express   = require('express'),
     app       = express(),
     morgan    = require('morgan'),
     form_data = require('form-data'),
-    fetch     = require('node-fetch');
+    fetch     = require('node-fetch'),
+    entries   = require('object.entries');
 
 Object.assign=require('object-assign')
 
 app.engine('html', require('ejs').renderFile);
 app.use(morgan('combined'))
 
-Object.entries(process.env).map(([k,v])=>console.log(k,v))
+Object.entries(process.env).map(([v,k])=>console.log(k,v))
 
 let {client_id, client_secret} = process.env['OAUTH_CLIENT_ID'] ?
     {client_id: process.env['OAUTH_CLIENT_ID'], client_secret: process.env['OAUTH_CLIENT_SECRET'] } :
