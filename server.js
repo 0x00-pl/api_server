@@ -6,6 +6,10 @@ var express   = require('express'),
     fetch     = require('node-fetch'),
     entries   = require('object.entries');
 
+if (!Object.entries) {
+    entries.shim();
+}
+
 Object.assign=require('object-assign')
 
 app.engine('html', require('ejs').renderFile);
