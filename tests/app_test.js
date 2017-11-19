@@ -1,10 +1,10 @@
+process.env['OAUTH_CLIENT_ID'] = 'testingId'
+process.env['OAUTH_CLIENT_SECRET'] = 'testingSecret'
+
 var server   = require('../server'),
     chai     = require('chai'),
     chaiHTTP = require('chai-http'),
     should   = chai.should();
-
-process.env['OAUTH_CLIENT_ID'] = 'testingId'
-process.env['OAUTH_CLIENT_SECRET'] = 'testingSecret'
 
 chai.use(chaiHTTP);
 
