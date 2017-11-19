@@ -97,12 +97,15 @@ app.get('/env', function (req, res) {
 
 
 app.get('/oauth0', function (req, res) {
-    res.redirect('https://github.com/login/oauth/authorize?client_id='+client_id)
+    let cb = encodeURIComponent(req.query.cb || '/pagecount')
+    let rd = encodeURIComponent(req.protocol+'://'+req.get('Host')+'/oauth1?cb='+cb)
+    //res.json({'redirect': 'https://github.com/login/oauth/authorize?client_id='+client_id+'&redirect_url='+rd})
+    res.redirect('https://github.com/login/oauth/authorize?client_id='+client_id+'&redirect_uri='+rd)
 })
 
 
 app.get('/oauth1', function (req, res) {
-    console.log(req.originalUrl)
+    console.log(req.originalUrl, req.query)
     let [a, code] = req.originalUrl.split('code=')
     
     let form = new form_data();
@@ -113,7 +116,7 @@ app.get('/oauth1', function (req, res) {
 	.then(b=>b.json())
 	.then(j=>{
 	    let token = 'encoded:'+j.access_token
-	    res.send('saving token: '+token)
+	    res.redirect(req.query.cb+'?token='+token)  // redirect back
 	})
 })
 
