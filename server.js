@@ -96,6 +96,7 @@ app.get('/env', function (req, res) {
 })
 
 
+let github_url = 'https://api.github.com'
 app.get('/oauth0', function (req, res) {
     let cb = encodeURIComponent(req.query.cb || '/pagecount')
     let rd = encodeURIComponent(req.protocol+'://'+req.get('Host')+'/oauth1?cb='+cb)
@@ -115,9 +116,17 @@ app.get('/oauth1', function (req, res) {
     fetch('https://github.com/login/oauth/access_token', {method: 'POST', headers: {'Accept': 'application/json'}, body: form})
 	.then(b=>b.json())
 	.then(j=>{
-	    let token = 'encoded:'+j.access_token
+	    let token = j.access_token
 	    res.redirect(req.query.cb+'?token='+token)  // redirect back
 	})
+})
+
+app.get('/api/user', function (req, res) {
+    res.set('Access-Control-Allow-Origin', '*')
+    let token = req.query.token
+    console.log(token)
+    fetch(github_url+'/user', {headers: {'Authorization': 'token '+token}})
+	.then(b=>b.text()).then(t=>res.send(t))
 })
 
 app.get('/pagecount', function (req, res) {
