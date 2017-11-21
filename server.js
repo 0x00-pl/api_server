@@ -1,10 +1,11 @@
 //  OpenShift sample Node application
-var express   = require('express'),
-    app       = express(),
-    morgan    = require('morgan'),
-    form_data = require('form-data'),
-    fetch     = require('node-fetch'),
-    entries   = require('object.entries');
+var express     = require('express'),
+    app         = express(),
+    morgan      = require('morgan'),
+    form_data   = require('form-data'),
+    fetch       = require('node-fetch'),
+    entries     = require('object.entries'),
+    body_parser = require('body-parser');
 
 if (!Object.entries) {
     entries.shim();
@@ -121,12 +122,42 @@ app.get('/oauth1', function (req, res) {
 	})
 })
 
+function api_user(token) {
+    return fetch(github_url+'/user', {headers: {'Authorization': 'token '+token}})
+	.then(b=>b.json())
+}
 app.get('/api/user', function (req, res) {
     res.set('Access-Control-Allow-Origin', '*')
     let token = req.query.token
-    console.log(token)
-    fetch(github_url+'/user', {headers: {'Authorization': 'token '+token}})
-	.then(b=>b.text()).then(t=>res.send(t))
+    api_user(token)
+	.then(j=>res.json(j))
+})
+
+app.get('/room', function (req, res){
+    res.set('Access-Control-Allow-Origin', '*')
+    let token = req.query.token
+    if (db) {
+    } else {
+	res.render('index.html', { pageCountMessage : null, env : JSON.stringify(process.env)});
+    }
+})
+
+app.post('/room/post', body_parser.json(), function (req, res){
+    let msg = req.body.msg
+    if (db){
+	api_user()
+	    .then(user=>{
+		let col = db.collection('room');
+		let name = user.login
+		col.insert({ip: req.ip, date: Date.now(), name, msg});
+		col.find().sort({date:-1}).limit(50)
+		    .toArray(function (err, data) {
+			res.json(data)
+		    })
+	    })
+    } else {
+	res.json({err: 'login required'})
+    }
 })
 
 app.get('/pagecount', function (req, res) {
