@@ -137,8 +137,12 @@ app.get('/room', function (req, res){
     res.set('Access-Control-Allow-Origin', '*')
     let token = req.query.token
     if (db) {
+	col.find().sort({date:-1}).limit(50)
+	    .toArray(function (err, data) {
+		res.json(data)
+	    })
     } else {
-	res.render('index.html', { pageCountMessage : null, env : JSON.stringify(process.env)});
+	res.json({err: 'no db'})
     }
 })
 
@@ -149,14 +153,17 @@ app.post('/room/post', body_parser.json(), function (req, res){
 	    .then(user=>{
 		let col = db.collection('room');
 		let name = user.login
-		col.insert({ip: req.ip, date: Date.now(), name, msg});
+		col.insert({ip: req.ip, date: Date.now(), name, msg})
 		col.find().sort({date:-1}).limit(50)
 		    .toArray(function (err, data) {
 			res.json(data)
 		    })
 	    })
+	    .catch(e=>{
+		res.json({err: 'login required'})
+	    })
     } else {
-	res.json({err: 'login required'})
+	res.json({err: 'no db'})
     }
 })
 
