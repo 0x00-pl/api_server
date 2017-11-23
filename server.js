@@ -81,7 +81,7 @@ app.get('/', function (req, res) {
 	initDb(function(err){});
     }
     if (db) {
-	var col = db.collection('counts');
+	let col = db.collection('counts');
 	// Create a document with request IP and current time of request
 	col.insert({ip: req.ip, date: Date.now()});
 	col.count(function(err, count){
@@ -137,6 +137,7 @@ app.get('/room', function (req, res){
     res.set('Access-Control-Allow-Origin', '*')
     let token = req.query.token
     if (db) {
+	let col = db.collection('room');
 	col.find().sort({date:-1}).limit(50)
 	    .toArray(function (err, data) {
 		res.json(data)
