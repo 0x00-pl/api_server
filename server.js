@@ -133,7 +133,7 @@ app.get('/api/user', function (req, res) {
 	.then(j=>res.json(j))
 })
 
-app.get('/room', function (req, res){
+app.get('/api/room', function (req, res){
     res.set('Access-Control-Allow-Origin', '*')
     let token = req.query.token
     if (db) {
@@ -147,7 +147,8 @@ app.get('/room', function (req, res){
     }
 })
 
-app.post('/room/post', body_parser.json(), function (req, res){
+app.post('/api/room/post', body_parser.json(), function (req, res){
+    res.set('Access-Control-Allow-Origin', '*')
     let msg = req.body.msg
     if (db){
 	api_user()
