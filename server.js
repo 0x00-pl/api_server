@@ -147,7 +147,8 @@ app.get('/api/room', function (req, res){
     }
 })
 
-app.post('/api/room/post', body_parser.json(), function (req, res){
+app.use(body_parser.json())
+app.post('/api/room/post', function (req, res){
     res.set('Access-Control-Allow-Origin', '*')
     let msg = req.body.msg
     if (db){
