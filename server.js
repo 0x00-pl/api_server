@@ -147,6 +147,7 @@ app.get('/api/room', function (req, res){
     }
 })
 
+app.use(body_parser.urlencoded({ extended: false }));
 app.use(body_parser.json())
 app.post('/api/room/post', function (req, res){
     res.set('Access-Control-Allow-Origin', '*')
