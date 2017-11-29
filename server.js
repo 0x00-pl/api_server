@@ -150,11 +150,11 @@ app.get('/api/room', function (req, res){
 app.use(body_parser.text())
 app.post('/api/room/post', function (req, res){
     res.set('Access-Control-Allow-Origin', '*')
+    let token = req.query.token
     let body = JSON.parse(req.body)
     let msg = body.msg
-    console.log(req.body)
     if (db){
-	api_user()
+	api_user(token)
 	    .then(user=>{
 		let col = db.collection('room');
 		let name = user.login
