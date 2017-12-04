@@ -7,79 +7,93 @@ var express     = require('express'),
     entries     = require('object.entries'),
     body_parser = require('body-parser');
 
-if (!Object.entries) {
-    entries.shim();
-}
-
-Object.assign=require('object-assign')
-
-app.engine('html', require('ejs').renderFile);
-app.use(morgan('combined'))
-
-Object.entries(process.env).map(([k,v])=>console.log(k,v))
-
-let {client_id, client_secret} = process.env['OAUTH_CLIENT_ID'] ?
-    {client_id: process.env['OAUTH_CLIENT_ID'], client_secret: process.env['OAUTH_CLIENT_SECRET'] } :
-    require('./oauth-conf')
-
-var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
-    ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
-    mongoURL = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGO_URL,
-    mongoURLLabel = "";
-
-
-if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
-    var mongoServiceName = process.env.DATABASE_SERVICE_NAME.toUpperCase(),
-	mongoHost = process.env[mongoServiceName + '_SERVICE_HOST'],
-	mongoPort = process.env[mongoServiceName + '_SERVICE_PORT'],
-	mongoDatabase = process.env[mongoServiceName + '_DATABASE'],
-	mongoPassword = process.env[mongoServiceName + '_PASSWORD'],
-	mongoUser = process.env[mongoServiceName + '_USER'];
-
-    console.log('[debug]env: ', mongoHost, mongoPort, mongoDatabase, mongoUser, mongoPassword)
-    if (mongoHost && mongoPort && mongoDatabase) {
-	mongoURLLabel = mongoURL = 'mongodb://';
-	if (mongoUser && mongoPassword) {
-	    mongoURL += mongoUser + ':' + mongoPassword + '@';
-	}
-	// Provide UI label that excludes user id and pw
-	mongoURLLabel += mongoHost + ':' + mongoPort + '/' + mongoDatabase;
-	mongoURL += mongoHost + ':' +  mongoPort + '/' + mongoDatabase;
+function pads(){
+    if (!Object.entries) {
+	entries.shim();
     }
-    console.log('[debug]mongoURL: ', mongoURL)
+
+    Object.assign=require('object-assign')
+    Object.entries(process.env).map(([k,v])=>console.log(k,v))
+}
+pads()
+
+function middlewares(app){
+    app.engine('html', require('ejs').renderFile);
+    app.use(morgan('combined'))
+}
+middlewares(app)
+
+function normalize_config(conf){
+    let ret = {}
+    return Objext.keys(conf).map(k=>{
+	ret[k.toLowerCase()] = conf[k]
+    })
+}
+function load_config_from_default(){
+    return {}
+}
+function load_config_from_file(){
+    try {
+	return normalize_config(require('./config'))
+    } catch(err){
+	return {}
+    }
+}
+function load_config_from_env(){
+    return normalize_config(process.env)
+}
+function config_alias(conf){
+    conf.port = conf.port || conf.openshift_nodejs_port || 8080
+    conf.ip = conf.ip || conf.openshift_nodejs_ip || '0.0.0.0'
+    conf.mongourl = conf.openshift_mongodb_db_url || conf.mongo_url
+
+    if(conf.database_service_name){
+	let name = conf.database_service_name.toLowerCase()
+	let host = conf[name+'_service_host']
+	let port = conf[name+'_service_port']
+	let database = conf[name+'_database']
+	let password = conf[name+'_password']
+	let user = conf[name+'_user']
+	if (user && password){
+	    conf.mongourl = `mongodb://${user}:${password}@${host}:${port}/${database}`
+	} else {
+	    conf.mongourl = `mongodb://${host}:${port}/${database}`
+	}
+    }
+
+    return conf
+}
+function load_config(){
+    return config_alias(
+	Object.assign(
+	    {},
+	    load_config_from_default(),
+	    load_config_from_file(),
+	    load_config_from_env()
+	)
+    )
 }
 
-var db = null,
-    dbDetails = new Object();
+let config = load_config()
+
 
 var initDb = function(callback) {
-    if (mongoURL == null) return;
+    if (mongourl == null) return null;
 
     var mongodb = require('mongodb');
-    if (mongodb == null) return;
+    if (mongodb == null) return null;
 
-    console.log('[debug]connecting')
-    mongodb.connect(mongoURL, function(err, conn) {
+    mongodb.connect(config.mongourl, function(err, conn) {
 	if (err) {
 	    callback(err);
-	    return;
+	    return null;
 	}
-
-	db = conn;
-	dbDetails.databaseName = db.databaseName;
-	dbDetails.url = mongoURLLabel;
-	dbDetails.type = 'MongoDB';
-
-      console.log('Connected to MongoDB at: %s', mongoURL);
+	return conn
   });
 };
+let db = initDb(console.log);
 
 app.get('/', function (req, res) {
-    // try to initialize the db on every request if it's not already
-    // initialized.
-    if (!db) {
-	initDb(function(err){});
-    }
     if (db) {
 	let col = db.collection('counts');
 	// Create a document with request IP and current time of request
@@ -101,7 +115,6 @@ let github_url = 'https://api.github.com'
 app.get('/oauth0', function (req, res) {
     let cb = encodeURIComponent(req.query.cb || '/pagecount')
     let rd = encodeURIComponent(req.protocol+'://'+req.get('Host')+'/oauth1?cb='+cb)
-    //res.json({'redirect': 'https://github.com/login/oauth/authorize?client_id='+client_id+'&redirect_url='+rd})
     res.redirect('https://github.com/login/oauth/authorize?client_id='+client_id+'&redirect_uri='+rd)
 })
 
