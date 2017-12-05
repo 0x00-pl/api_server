@@ -25,7 +25,7 @@ middlewares(app)
 
 function normalize_config(conf){
     let ret = {}
-    return Objext.keys(conf).map(k=>{
+    return Object.keys(conf).map(k=>{
 	ret[k.toLowerCase()] = conf[k]
     })
 }
