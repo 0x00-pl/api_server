@@ -78,7 +78,7 @@ let config = load_config()
 
 
 var initDb = function(callback) {
-    if (mongourl == null) return null;
+    if (config.mongourl == null) return null;
 
     var mongodb = require('mongodb');
     if (mongodb == null) return null;
