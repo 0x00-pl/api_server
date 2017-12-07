@@ -210,7 +210,7 @@ initDb(function(err){
     console.log('Error connecting to Mongo. Message:\n'+err);
 });
 
-app.listen(port, ip);
+app.listen(config.port, config.ip);
 console.log('Server running on http://%s:%s', ip, port);
 
 module.exports = app ;
