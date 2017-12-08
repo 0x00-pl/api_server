@@ -211,6 +211,6 @@ initDb(function(err){
 });
 
 app.listen(config.port, config.ip);
-console.log('Server running on http://%s:%s', ip, port);
+console.log('Server running on http://%s:%s', config.ip, config.port);
 
 module.exports = app ;
