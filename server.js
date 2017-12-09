@@ -13,7 +13,6 @@ function pads(){
     }
 
     Object.assign=require('object-assign')
-    Object.entries(process.env).map(([k,v])=>console.log(k,v))
 }
 pads()
 
@@ -120,7 +119,6 @@ app.get('/oauth0', function (req, res) {
 
 
 app.get('/oauth1', function (req, res) {
-    console.log(req.originalUrl, req.query)
     let [a, code] = req.originalUrl.split('code=')
     
     let form = new form_data();
@@ -204,10 +202,6 @@ app.get('/pagecount', function (req, res) {
 app.use(function(err, req, res, next){
     console.error(err.stack);
     res.status(500).send('Something bad happened!');
-});
-
-initDb(function(err){
-    console.log('Error connecting to Mongo. Message:\n'+err);
 });
 
 app.listen(config.port, config.ip);
