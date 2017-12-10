@@ -110,11 +110,10 @@ app.get('/env', function (req, res) {
 })
 
 
-let github_url = 'https://api.github.com'
 app.get('/oauth0', function (req, res) {
     let cb = encodeURIComponent(req.query.cb || '/pagecount')
     let rd = encodeURIComponent(req.protocol+'://'+req.get('Host')+'/oauth1?cb='+cb)
-    res.redirect('https://github.com/login/oauth/authorize?client_id='+client_id+'&redirect_uri='+rd)
+    res.redirect(config.oauth_auth+'?client_id='+config.oauth_client_id+'&redirect_uri='+rd)
 })
 
 
@@ -122,10 +121,10 @@ app.get('/oauth1', function (req, res) {
     let [a, code] = req.originalUrl.split('code=')
     
     let form = new form_data();
-    form.append('client_id', client_id);
-    form.append('client_secret', client_secret);
+    form.append('client_id', config.oauth_client_id);
+    form.append('client_secret', config.oauth_client_secret);
     form.append('code', code);
-    fetch('https://github.com/login/oauth/access_token', {method: 'POST', headers: {'Accept': 'application/json'}, body: form})
+    fetch(config.oauth_access_token, {method: 'POST', headers: {'Accept': 'application/json'}, body: form})
 	.then(b=>b.json())
 	.then(j=>{
 	    let token = j.access_token
@@ -134,7 +133,7 @@ app.get('/oauth1', function (req, res) {
 })
 
 function api_user(token) {
-    return fetch(github_url+'/user', {headers: {'Authorization': 'token '+token}})
+    return fetch(config.oauth_server+'/user', {headers: {'Authorization': 'token '+token}})
 	.then(b=>b.json())
 }
 app.get('/api/user', function (req, res) {
