@@ -47,7 +47,7 @@ function config_alias(conf){
     conf.ip = conf.ip || conf.openshift_nodejs_ip || '0.0.0.0'
     conf.mongourl = conf.mongourl || conf.openshift_mongodb_db_url || conf.mongo_url
 
-    if(conf.mongourl==null && conf.database_service_name){
+    if(conf.database_service_name){
 	let name = conf.database_service_name.toLowerCase()
 	let host = conf[name+'_service_host']
 	let port = conf[name+'_service_port']
