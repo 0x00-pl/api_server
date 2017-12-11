@@ -45,9 +45,9 @@ function load_config_from_env(){
 function config_alias(conf){
     conf.port = conf.port || conf.openshift_nodejs_port || 8080
     conf.ip = conf.ip || conf.openshift_nodejs_ip || '0.0.0.0'
-    conf.mongourl = conf.openshift_mongodb_db_url || conf.mongo_url
+    conf.mongourl = conf.mongourl || conf.openshift_mongodb_db_url || conf.mongo_url
 
-    if(conf.database_service_name){
+    if(conf.mongourl==null && conf.database_service_name){
 	let name = conf.database_service_name.toLowerCase()
 	let host = conf[name+'_service_host']
 	let port = conf[name+'_service_port']
@@ -76,6 +76,7 @@ function load_config(){
 
 let config = load_config()
 
+let db = null
 var initDb = function(callback) {
     if (config.mongourl == null) return null;
 
@@ -88,10 +89,10 @@ var initDb = function(callback) {
 	    callback(err);
 	    return null;
 	}
-	return conn
+	db = conn
     });
 };
-let db = initDb(console.log);
+initDb()
 
 app.get('/', function (req, res) {
     if (db) {
