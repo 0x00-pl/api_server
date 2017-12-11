@@ -100,7 +100,7 @@ app.get('/', function (req, res) {
 	// Create a document with request IP and current time of request
 	col.insert({ip: req.ip, date: Date.now()});
 	col.count(function(err, count){
-	    res.render('index.html', { pageCountMessage : count, dbInfo: dbDetails, env : JSON.stringify(process.env) });
+	    res.render('index.html', { pageCountMessage : count, dbInfo: config.mongourl, env : JSON.stringify(process.env) });
 	});
     } else {
 	res.render('index.html', { pageCountMessage : null, env : JSON.stringify(process.env)});
