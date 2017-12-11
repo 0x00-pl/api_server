@@ -82,13 +82,14 @@ var initDb = function(callback) {
     var mongodb = require('mongodb');
     if (mongodb == null) return null;
 
+    console.log('[debug]: connecting db: ', config.mongourl)
     mongodb.connect(config.mongourl, function(err, conn) {
 	if (err) {
 	    callback(err);
 	    return null;
 	}
 	return conn
-  });
+    });
 };
 let db = initDb(console.log);
 
