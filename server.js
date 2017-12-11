@@ -92,7 +92,7 @@ var initDb = function(callback) {
 	db = conn
     });
 };
-initDb()
+initDb(console.log)
 
 app.get('/', function (req, res) {
     if (db) {
