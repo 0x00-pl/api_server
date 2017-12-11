@@ -24,9 +24,10 @@ middlewares(app)
 
 function normalize_config(conf){
     let ret = {}
-    return Object.keys(conf).map(k=>{
+    Object.keys(conf).map(k=>{
 	ret[k.toLowerCase()] = conf[k]
     })
+    return ret
 }
 function load_config_from_default(){
     return {}
@@ -74,7 +75,6 @@ function load_config(){
 }
 
 let config = load_config()
-
 
 var initDb = function(callback) {
     if (config.mongourl == null) return null;
