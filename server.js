@@ -122,15 +122,16 @@ app.get('/oauth1', function (req, res) {
     let [a, code] = req.originalUrl.split('code=')
     
     let form = new form_data();
-    form.append('client_id', config.oauth_client_id);
-    form.append('client_secret', config.oauth_client_secret);
-    form.append('code', code);
+    form.append('client_id', config.oauth_client_id)
+    form.append('client_secret', config.oauth_client_secret)
+    form.append('code', code)
     fetch(config.oauth_access_token, {method: 'POST', headers: {'Accept': 'application/json'}, body: form})
 	.then(b=>b.json())
 	.then(j=>{
 	    let token = j.access_token
 	    res.redirect(req.query.cb+'?token='+token)  // redirect back
 	})
+	.catch(err=>res.end(err))
 })
 
 function api_user(token) {
@@ -142,6 +143,7 @@ app.get('/api/user', function (req, res) {
     let token = req.query.token
     api_user(token)
 	.then(j=>res.json(j))
+	.catch(err=>res.end(err))
 })
 
 app.get('/api/room', function (req, res){
