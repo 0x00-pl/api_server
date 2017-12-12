@@ -1,6 +1,7 @@
-let form_data   = require('form-data')
+let form_data = require('form-data')
+let fetch = require('node-fetch')
 
-function append_oauth(app){
+function append_oauth(app, config){
     app.get('/oauth0', function(req, res){
 	let cb = encodeURIComponent(req.query.cb || '/pagecount')
 	let rd = encodeURIComponent(req.protocol+'://'+req.get('Host')+'/oauth1?cb='+cb)

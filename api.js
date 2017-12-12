@@ -1,10 +1,11 @@
+let fetch = require('node-fetch')
 
-function api_user(token) {
+function api_user(token, config) {
     return fetch(config.oauth_server+'/user', {headers: {'Authorization': 'token '+token}})
 	.then(b=>b.json())
 }
 
-function append_api(app){
+function append_api(app, config){
     app.get('/api/user', function (req, res) {
 	res.set('Access-Control-Allow-Origin', '*')
 	let token = req.query.token

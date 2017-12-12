@@ -1,5 +1,5 @@
 
-function append_api_room(app, db){
+function append_api_room(app, config, db){
     app.get('/api/room', function (req, res){
 	res.set('Access-Control-Allow-Origin', '*')
 	let token = req.query.token
