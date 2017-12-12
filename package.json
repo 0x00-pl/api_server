@@ -1,7 +1,7 @@
 {
-  "name": "nodejs-ex",
+  "name": "api_server",
   "version": "0.0.1",
-  "description": "Node.js sample app for OpenShift 3",
+  "description": "",
   "main": "server.js",
   "dependencies": {
     "body-parser": "^1.18.2",
@@ -25,14 +25,7 @@
     "start": "node server.js",
     "test": "IP=0.0.0.0 PORT=3030 mocha --timeout 5000 tests/*_test.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "http://github.com/openshift/nodejs-ex.git"
-  },
-  "author": "Steve Speicher <sspeiche@gmail.com>",
-  "license": "CC-BY-1.0",
-  "bugs": {
-    "url": "http://github.com/openshift/nodejs-ex/issues"
-  },
-  "homepage": "http://github.com/openshift/nodejs-ex"
+  "author": "",
+  "license": "",
+  "homepage": ""
 }

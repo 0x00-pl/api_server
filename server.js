@@ -5,7 +5,7 @@ var express     = require('express'),
     form_data   = require('form-data'),
     fetch       = require('node-fetch'),
     entries     = require('object.entries'),
-    body_parser = require('body-parser');
+    body_parser = require('body-parser')
 
 function pads(){
     if (!Object.entries) {
@@ -94,6 +94,9 @@ var initDb = function(callback) {
 };
 initDb(console.log)
 
+
+app.use(body_parser.text())
+
 app.get('/', function (req, res) {
     if (db) {
 	let col = db.collection('counts');
@@ -111,80 +114,9 @@ app.get('/env', function (req, res) {
     res.json(process.env)
 })
 
-
-app.get('/oauth0', function (req, res) {
-    let cb = encodeURIComponent(req.query.cb || '/pagecount')
-    let rd = encodeURIComponent(req.protocol+'://'+req.get('Host')+'/oauth1?cb='+cb)
-    res.redirect(config.oauth_auth+'?client_id='+config.oauth_client_id+'&redirect_uri='+rd)
-})
-
-
-app.get('/oauth1', function (req, res) {
-    let [a, code] = req.originalUrl.split('code=')
-    
-    let form = new form_data();
-    form.append('client_id', config.oauth_client_id)
-    form.append('client_secret', config.oauth_client_secret)
-    form.append('code', code)
-    fetch(config.oauth_access_token, {method: 'POST', headers: {'Accept': 'application/json'}, body: form})
-	.then(b=>b.json())
-	.then(j=>{
-	    let token = j.access_token
-	    res.redirect(req.query.cb+'?token='+token)  // redirect back
-	})
-	.catch(err=>res.end(err))
-})
-
-function api_user(token) {
-    return fetch(config.oauth_server+'/user', {headers: {'Authorization': 'token '+token}})
-	.then(b=>b.json())
-}
-app.get('/api/user', function (req, res) {
-    res.set('Access-Control-Allow-Origin', '*')
-    let token = req.query.token
-    api_user(token)
-	.then(j=>res.json(j))
-	.catch(err=>res.end(err))
-})
-
-app.get('/api/room', function (req, res){
-    res.set('Access-Control-Allow-Origin', '*')
-    let token = req.query.token
-    if (db) {
-	let col = db.collection('room');
-	col.find().sort({date:-1}).limit(50)
-	    .toArray(function (err, data) {
-		res.json(data)
-	    })
-    } else {
-	res.json({err: 'no db'})
-    }
-})
-
-app.use(body_parser.text())
-app.post('/api/room/post', function (req, res){
-    res.set('Access-Control-Allow-Origin', '*')
-    let token = req.query.token
-    let body = JSON.parse(req.body)
-    let msg = body.msg
-    if (db){
-	api_user(token)
-	    .then(user=>{
-		let col = db.collection('room');
-		let name = user.login
-		col.insert({ip: req.ip, date: Date.now(), name, msg})
-		col.find().sort({date:-1}).limit(50)
-		    .toArray(function (err, data) {
-			res.json(data)
-		    })
-	    })
-	    .catch(e=>{
-		res.json({err: 'login required'})
-	    })
-    } else {
-	res.json({err: 'no db'})
-    }
-})
+require('./oauth')(app)
+require('./api')(app)
+require('./api_room')(app, db)
 
 app.get('/pagecount', function (req, res) {
     // try to initialize the db on every request if it's not already
