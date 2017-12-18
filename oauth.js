@@ -1,5 +1,6 @@
 let form_data = require('form-data')
 let fetch = require('node-fetch')
+let { URL } = require('url')
 
 function append_oauth(app, config){
     app.get('/oauth0', function(req, res){
@@ -19,7 +20,10 @@ function append_oauth(app, config){
 	    .then(b=>b.json())
 	    .then(j=>{
 		let token = j.access_token
-		res.redirect(req.query.cb+'?token='+token)  // redirect back
+		let next = new URL(req.query.cb)
+		next.searchParams.append('token', token)
+		// res.redirect(req.query.cb+'?token='+token)  // redirect back
+		res.redirect(next.href)
 	    })
 	    .catch(err=>res.end(err))
     })
