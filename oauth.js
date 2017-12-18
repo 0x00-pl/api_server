@@ -21,7 +21,7 @@ function append_oauth(app, config){
 	    .then(j=>{
 		let token = j.access_token
 		console.log('url: ', req.query.cb)
-		let next = new URL(req.query.cb)
+		let next = new URL(decodeURIComponent(req.query.cb))
 		next.searchParams.append('token', token)
 		console.log('token: ', token.href)
 		// res.redirect(req.query.cb+'?token='+token)  // redirect back
