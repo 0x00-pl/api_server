@@ -49,15 +49,15 @@ app.get('/', function (req, res) {
 	// Create a document with request IP and current time of request
 	col.insert({ip: req.ip, date: Date.now()});
 	col.count(function(err, count){
-	    res.render('index.html', { pageCountMessage : count, dbInfo: config.mongourl, env : JSON.stringify(config, null, '  ') });
+	    res.render('index.html', { pageCountMessage: count, dbInfo: config.mongourl });
 	});
     } else {
-	res.render('index.html', { pageCountMessage : null, env : JSON.stringify(config, null, '  ')});
+	res.render('index.html', { pageCountMessage: null });
     }
 });
 
-app.get('/env', function (req, res) {
-    res.json(process.env)
+app.get('/config', function (req, res) {
+    res.json(config)
 })
 
 require('./oauth')(app, config)
