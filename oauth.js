@@ -5,13 +5,13 @@ let { URL } = require('url')
 function append_oauth(app, config){
     app.get('/oauth0', function(req, res){
 	let cb = encodeURIComponent(req.query.cb || '/pagecount')
-	let rd = encodeURIComponent(req.protocol+'://'+req.get('Host')+'/oauth1?cb='+cb)
+        let protocol = req.get('X-Forwarded-Proto') || req.protocol
+	let rd = encodeURIComponent(protocol+'://'+req.get('Host')+'/oauth1?cb='+cb)
 	res.redirect(config.oauth_auth+'?client_id='+config.oauth_client_id+'&redirect_uri='+rd)
     })
 
     app.get('/oauth1', function (req, res) {
 	let [a, code] = req.originalUrl.split('code=')
-	
 	let form = new form_data();
 	form.append('client_id', config.oauth_client_id)
 	form.append('client_secret', config.oauth_client_secret)
