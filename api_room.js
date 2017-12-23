@@ -1,6 +1,8 @@
+let express = require('express')
 
-function append_api_room(app, config, db){
-    app.get('/api/room', function (req, res){
+function append_api_room(config, db){
+    let app = express.Router()
+    app.get('/', function (req, res){
 	res.set('Access-Control-Allow-Origin', '*')
 	let token = req.query.token
 	if (db) {
@@ -14,7 +16,7 @@ function append_api_room(app, config, db){
 	}
     })
 
-    app.post('/api/room/post', function (req, res){
+    app.post('/post', function (req, res){
 	res.set('Access-Control-Allow-Origin', '*')
 	let token = req.query.token
 	let body = JSON.parse(req.body)

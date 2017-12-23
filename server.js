@@ -61,8 +61,8 @@ app.get('/config', function (req, res) {
 })
 
 require('./oauth')(app, config)
-require('./api')(app, config)
-require('./api_room')(app, config, db)
+app.use('/api', require('./api')(config))
+app.use('/api/room', require('./api_room')(config, db))
 
 app.get('/pagecount', function (req, res) {
     // try to initialize the db on every request if it's not already
