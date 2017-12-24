@@ -39,6 +39,7 @@ function append_api_room(config, db){
 	    res.json({err: 'no db'})
 	}
     })
+    return app
 }
 
 module.exports = append_api_room
