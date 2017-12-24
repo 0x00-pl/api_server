@@ -13,7 +13,7 @@ function append_api(config){
 	let token = req.query.token
 	api_user(token, config)
 	    .then(j=>res.json(j))
-	    .catch(err=>res.end(err))
+	    .catch(err=>res.status(500).end(err))
     })
     return app
 }
