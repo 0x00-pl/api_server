@@ -63,6 +63,7 @@ app.get('/config', function (req, res) {
 require('./oauth')(app, config)
 app.use('/api', require('./api')(config))
 app.use('/api/room', require('./api_room')(config, db))
+app.use('/api/sfct', require('./api_sfct.js')(config))
 
 app.get('/pagecount', function (req, res) {
     // try to initialize the db on every request if it's not already
