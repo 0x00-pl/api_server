@@ -1,14 +1,17 @@
 let fetch = require('node-fetch')
+let express = require('express')
+let body_parser = require('body-parser')
 
 function call_api(spath, token){
     return fetch(spath, {headers: {'Authorization': 'token '+token}})
-	.then(b=>b.json())
+	.then(b=>b.text())
 }
 
 function append_api_sfct(config){
     let app = express.Router()
     let oserver = config.oauth_server
 
+    app.use(body_parser.text())
     app.use(function(req, res, next){
 	req.token = req.query.token
 	req.args = JSON.parse(req.body)
@@ -20,12 +23,19 @@ function append_api_sfct(config){
 	res.end(JSON.stringify(req.args, null, '  '))
     })
     app.post('/auth', function(req, res){
-	res.set('Access-Control-Allow-Origin', '*')
-	let token = req.query.token
-	call_api(oserver+'/user/repos', token)
+	call_api(oserver+'/user/repos', req.token)
+	    .then(JSON.parse)
 	    .then(j=>{
 		res.json(j)
 	    })
+	    .catch(error=>res.status(500).end(error))
+    })
+    app.post('/m_following', function(req, res){
+	call_api(oserver+'/user', req.token)
+	    .then(JSON.parse)
+	    .then(j=>j.login)
+	    .then(username=>call_api(`/users/MarisaKirisame/following/${username}`, req.token))
+	    .then(t=>res.end(t))
 	    .catch(error=>res.status(500).end(error))
     })
 
