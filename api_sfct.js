@@ -22,21 +22,22 @@ function append_api_sfct(config){
     app.post('/echo', function(req, res){
 	res.end(JSON.stringify(req.args, null, '  '))
     })
+    
     app.post('/auth', function(req, res){
 	call_api(oserver+'/user/repos', req.token)
 	    .then(JSON.parse)
 	    .then(j=>{
 		res.json(j)
 	    })
-	    .catch(error=>res.status(500).end(error))
+	    .catch(error=>res.status(500).end(error.message))
     })
+    
     app.post('/m_following', function(req, res){
 	call_api(oserver+'/user', req.token)
-	    .then(JSON.parse)
 	    .then(j=>j.login)
-	    .then(username=>call_api(`/users/MarisaKirisame/following/${username}`, req.token))
+	    .then(username=>call_api(`${oserver}/users/MarisaKirisame/following/${username}`, req.token))
 	    .then(t=>res.end(t))
-	    .catch(error=>res.status(500).end(error))
+	    .catch(error=>res.status(500).end(error.message))
     })
 
     app.post('/auth_sfct', function(req, res){
