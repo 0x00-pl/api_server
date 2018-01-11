@@ -38,9 +38,9 @@ function append_api_sfct(config, db){
     })
 
     // book : {name, chapter_list:[id]}
-    // chapter : {name, book_id, block_list:[id]}
-    // block : {origin, trans_list:[id]}
-    // trans : {owner, vote, trans_text}
+    // chapter : {book_id, name, block_list:[id]}
+    // block : {chapter_id, origin, trans_list:[id]}
+    // trans : {block_id, user_id, vote, text}
     // user : {name}
     app.post('/put_book', function(req, res){
 	let book = req.args.book
@@ -68,9 +68,9 @@ function append_api_sfct(config, db){
 	}
 	let db_book = db.collection('book')
 	if(req.args.book_id){
-	    let book_id = req.args.book_id
+	    let book_id = ObjectID(req.args.book_id)
 	    db_book
-		.findOne({_id: ObjectID(book_id)}, find_cb)
+		.findOne({_id: book_id}, find_cb)
 	} else if(req.args.book_name) {
 	    let book_name = req.args.book_name
 	    db_book
@@ -79,23 +79,50 @@ function append_api_sfct(config, db){
 	    res.status(500).end('needs {book_id} of {book_name}')
 	}
     })
+    app.post('/get_book_chapter', function(req, res){
+	function find_cb(err, book){
+	    if(err){
+		res.status(500).end(err.message)
+	    } else {
+		let chapter_list = book.chapter_list
+		db.collection('chapter')
+		    .find({_id: {$in: chapter_list}})
+		    .toArray(function(err, chapter_list){
+			book.chapter_list = chapter_list
+			res.end(JSON.stringify(book, null, '  '))
+		    })
+	    }
+	}
+
+	let db_book = db.collection('book')
+	if(req.args.book_name){
+	    let book_name = req.args.book_name
+	    db_book.findOne({name: book_name}, find_cb)
+	} else if(req.args.book_id){
+	    let book_id = ObjectID(req.args.book_id)
+	    db_book.findOne({_id: book_id}, find_cb)
+	} else {
+	    res.status(500).end('needs {book_id} or {book_name}')
+	}
+    })
+    
 
     app.post('/add_chapter', function(req, res){
 	let chapter = req.args.chapter
 	chapter.block_list = []
 	if(!chapter || !chapter.book_id){
-	    res.status(500).end('needs {name, book_id}')
+	    res.status(500).end('needs {book_id, name}')
 	} else {
 	    db.collection('chapter')
 		.insert(chapter, function(err){
 		    if(err){
 			res.status(500).end(err.message)
 		    } else {
-			let book_id = chapter.book_id
+			let book_id = ObjectID(chapter.book_id)
 			let chapter_id = chapter._id
 			db.collection('book')
 			    .update(
-				{_id:ObjectID(book_id)},
+				{_id: book_id},
 				{$addToSet: {chapter_list: chapter_id}},
 				function(err){
 				    if(err){
@@ -118,23 +145,64 @@ function append_api_sfct(config, db){
 	}
 	let db_chapter = db.collection('chapter')
 	if(req.args.chapter_id){
-	    let chapter_id = req.args.chapter_id
+	    let chapter_id = ObjectID(req.args.chapter_id)
 	    db_chapter
-		.find({_id: ObjectID(chapter_id)}, find_cb)
+		.findOne({_id: chapter_id}, find_cb)
 	} else if(req.args.book_id && req.args.chapter_name){
-	    let book_id = req.args.book_id
+	    let book_id = ObjectID(req.args.book_id)
 	    let chapter_name = req.args.chapter_name
 	    db_chapter
-		.find({book_id, name:chapter_name}, find_cb)
+		.findOne({book_id, name:chapter_name}, find_cb)
 	} else {
 	    res.status(500).end('needs {chapter_id} or {book_id, chapter_name}')
+	}
+    })
+    app.post('/get_chapter_block_trans', function(req, res){
+	function find_cb(err, chapter){
+	    if(err){
+		res.status(500).end(err.message)
+	    } else {
+		let block_list = chapter.block_list
+		db.collection('block').find({_id: {$in: block_list}}).toArray(function(err, block_list){
+		    if(err){
+			res.status(500).end(err.messate)
+		    } else {
+			let db_trans = db.collection('trans')
+			let block_list_P = block_list.map(block => {
+			    let trans_list = block.trans_list
+			    return db_trans.find({_id: {$in: trans_list}}).toArray()
+			})
+			Promise.all(block_list_P).then(function(block_list){
+			    chapter.block_list = block_list
+			    res.end(JSON.stringify(chapter, null, '  '))
+			}).catch(function(err){
+			    res.status(500).end(err.message)
+			})
+		    }
+		})
+	    }
+	}
+	
+	if(req.args.chapter_id){
+	    let chapter_id = ObjectID(req.args.chapter_id)
+	    db.collection('chapter').findOne({_id: chapter_id}, find_cb)
+	} else if(req.args.book_name && req.args.chapter_name){
+	    let book_name = req.args.book_name
+	    let chapter_name = req.args.chapter_name
+	    db.collection('book').findOne({name: book_name}, function(err, book){
+		let book_id = book._id
+		db.collection('chapter').findOne({book_id, name: chapter_name}, find_cb)
+	    })
+	    
+	} else {
+	    res.status(500).end('needs {chapter_id} or {book_name, chapter_name}')
 	}
     })
 
     app.post('/add_block', function(req, res){
 	let block = req.args.block
 	if(!block || !block.origin){
-	    res.status(500).end('needs {origin}')
+	    res.status(500).end('needs {chapter_id, origin}')
 	} else {
 	    block.trans_list = []
 	    db.collection('block')
@@ -142,10 +210,11 @@ function append_api_sfct(config, db){
 		    if(err){
 			res.status(500).end(err.message)
 		    } else {
+			let chapter_id = ObjectID(block.chapter_id)
 			let block_id = block._id
 			db.collect('chapter')
 			    .update(
-				{_id:ObjectID(book_id)},
+				{_id: chapter_id},
 				{$addToSet: {block_list: block_id}},
 				function(err){
 				    if(err){
@@ -160,9 +229,9 @@ function append_api_sfct(config, db){
     })
     app.post('/get_block', function(req, res){
 	if(req.args.block_id){
-	    let block_id = req.args.block_id
+	    let block_id = ObjectID(req.args.block_id)
 	    db.collection('block')
-		.find({_id:ObjectID(block_id)}, function(err, result){
+		.findOne({_id: block_id}, function(err, result){
 		    if(err){
 			res.status(500).end(err.message)
 		    } else {
@@ -174,6 +243,81 @@ function append_api_sfct(config, db){
 	}
     })
 
+    app.post('/add_trans', function(req, res){
+	let trans = req.args.trans
+	if(!trans || !trans.owner || !trans.text){
+	    res.status(500).end('needs {block_id, user_id, text}')
+	} else {
+	    trans.vote = 0
+	    db.collection('trans')
+		.insert(trans, err=>{
+		    if(err){
+			res.status(500).end(err.message)
+		    } else {
+			let block_id = ObjectID(trans.block_id)
+			let user_id = ObjectID(trans.user_id)
+			let trans_id = trans._id
+			db.collect('block')
+			    .update(
+				{_id: ObjectID(block_id)},
+				{$addToSet: {trans_list: trans_id}},
+				err=>{
+				    if(err){
+					res.status(500).end(err.message)
+				    } else {
+					res.end(JSON.stringify(trans, null, '  '))
+				    }
+				})
+		    }
+		})
+	}
+    })
+    app.post('/get_trans', function(req, res){
+	if(!req.args.trans_id){
+	    res.status(500).end('needs {trans_id}')
+	} else {
+	    let trans_id = ObjectID(req.args.trans_id)
+	    db.collection('trans')
+		.findOne({_id: trans_id}, function(err, trans){
+		    if(err){
+			res.status(500).end(err.message)
+		    } else {
+			res.end(JSON.stringify(trans, null, '  '))
+		    }
+		})
+	}
+    })
+
+    app.post('/add_user', function(req, res){
+	let user = req.args.user
+	if(!user || !user.name){
+	    res.status(500).end('needs {name}')
+	} else {
+	    db.collection('user')
+		.insert(user, err=>{
+		    if(err){
+			res.status(500).end(err.message)
+		    } else {
+			res.end(JSON.stringify(user, null, '  '))
+		    }
+		})
+	}
+    })
+    app.post('/get_user', function(req, res){
+	if(!req.args.user_id){
+	    res.status(500).end('needs {user_id}')
+	} else {
+	    let user_id = ObjectID(req.args.user_id)
+	    db.collection('user')
+		.findOne({_id: user_id}, function(err, user){
+		    if(err){
+			res.status(500).end(err.message)
+		    } else {
+			res.end(JSON.stringify(user, null, '  '))
+		    }
+		}) 
+	}
+    })
     
     return app
 }
