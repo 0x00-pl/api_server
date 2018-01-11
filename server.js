@@ -26,6 +26,7 @@ function middlewares(app){
 middlewares(app)
 
 let db = null
+let post_initDb = []
 var initDb = function(callback) {
     if (config.mongourl == null) return null;
 
@@ -39,6 +40,7 @@ var initDb = function(callback) {
 	    return null;
 	}
 	db = conn
+	post_initDb.forEach(f=>f(db))
     });
 };
 initDb(console.log)
@@ -62,8 +64,10 @@ app.get('/config', function (req, res) {
 
 require('./oauth')(app, config)
 app.use('/api', require('./api')(config))
-app.use('/api/room', require('./api_room')(config, db))
-app.use('/api/sfct', require('./api_sfct.js')(config))
+post_initDb.push(db=>{
+    app.use('/api/room', require('./api_room')(config, db))
+    app.use('/api/sfct', require('./api_sfct.js')(config, db))
+})
 
 app.get('/pagecount', function (req, res) {
     // try to initialize the db on every request if it's not already
