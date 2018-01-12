@@ -29,9 +29,13 @@ function append_api_sfct(config, db){
     app.post('/echo', function(req, res){
 	res.end(JSON.stringify(req.args, null, '  '))
     })
-    
+
+    app.post('/user', function(req, res){
+	call_api(oserver+'/user', req.token).then(JSON.parse).then(j => res.end(JSON.stringify(j, null, '  '))).catch(err => res.status(500).end(err.message))
+    })
     app.post('/auth', function(req, res){
 	call_api(oserver+'/user', req.token)
+	    .then(JSON.parse)
 	    .then(j => j.login)
 	    .then(username => call_api(`${oserver}/users/MarisaKirisame/following/${username}`, req.token))
 	    .then(t => res.end(t))
@@ -40,7 +44,7 @@ function append_api_sfct(config, db){
 
     // book : {name, chapter_list:[id]}
     // chapter : {book_id, name, block_list:[id]}
-    // block : {chapter_id, origin, trans_list:[id]}
+    // block : {chapter_id, origin, status, trans_list:[id]}
     // trans : {block_id, user_id, vote, origin, text}
     // user : {name}
     app.post('/add_book', function(req, res){
@@ -150,19 +154,38 @@ function append_api_sfct(config, db){
 	}
     })
     app.post('/get_chapter_block_trans', function(req, res){
+	function fill_trans(trans){
+	    return db.collection('user').findOne({_id: trans.user_id}).then(user=>{
+		trans.user = user
+		return trans
+	    })
+	}
+	function fill_block(block){
+	    return db.collection('trans').find({_id: {$in: block.trans_list}}).toArray().then(trans_list=>{
+		return Promise.all(trans_list.map(fill_trans))
+	    }).then(trans_list=>{
+		block.trans_list = trans_list
+		return block
+	    })
+	}
+	function fill_chapter(chapter){
+	    return db.collection('block').find({_id: {$in: chapter.block_list}}).toArray().then(block_list=>{
+		return Promise.all(block_list.map(fill_block))
+	    }).then(block_list=>{
+		chapter.block_list = block_list
+		return chapter
+	    }).then(chapter=>{
+		return db.collection('book').findOne({_id: chapter.book_id}).then(book=>{
+		    chapter.book = book
+		    return chapter
+		})
+	    })
+	}
 	function find_cb(err, chapter){
 	    if(err){
 		res.status(500).end(err.message)
 	    } else {
-		let block_list = chapter.block_list
-		db.collection('book').find({_id: {$in: block_list}}).toArray().then(block_list=>{
-		    let db_trans = db.collection('trans')
-		    return Promise.all(block_list.map(block=>{
-			let trans_list = block.trans_list
-			return db_trans.find({_id: {$in: trans_list}}).toArray()
-		    }))
-		}).then(function(block_list){
-		    chapter.block_list = block_list
+		fill_chapter(chapter).then(chapter=>{
 		    res.end(JSON.stringify(chapter, null, '  '))
 		}).catch(function(err){
 		    res.status(500).end(err.message)
@@ -188,10 +211,11 @@ function append_api_sfct(config, db){
 
     app.post('/add_block', function(req, res){
 	let block = req.args
-	if(!block || !block.origin){
+	if(!block || !block.chapter_id || !block.origin){
 	    res.status(500).end('needs {chapter_id, origin}')
 	} else {
 	    block.trans_list = []
+	    block.status = 'unverified'
 	    db.collection('block')
 		.insert(block, function(err){
 		    if(err){
@@ -199,7 +223,7 @@ function append_api_sfct(config, db){
 		    } else {
 			let chapter_id = ObjectID(block.chapter_id)
 			let block_id = block._id
-			db.collect('chapter')
+			db.collection('chapter')
 			    .update(
 				{_id: chapter_id},
 				{$addToSet: {block_list: block_id}},
@@ -232,23 +256,35 @@ function append_api_sfct(config, db){
 
     app.post('/add_trans', function(req, res){
 	let trans = req.args
-	if(!trans || !trans.owner || !trans.text){
-	    res.status(500).end('needs {block_id, user_id, text}')
+	if(!trans || !trans.text){
+	    res.status(500).end('needs {block_id, text}')
 	} else {
 	    let block_id = ObjectID(trans.block_id)
 	    trans.vote = 0
-	    db.collection('block').findOne({_id: block_id}).then(block=>{
-		trans.origin = block.origin
-		return db.collection('trans').insert(trans)
-	    }).then(a=>{
-		let user_id = ObjectID(trans.user_id)
-		let trans_id = trans._id
-		return db.collect('block').update(
-		    {_id: block_id},
-		    {$addToSet: {trans_list: trans_id}}
-		)
-	    }).then(a=>{
-		res.end(JSON.stringify(trans, null, '  '))
+	    let token = req.token
+	    call_api(oserver+'/user', req.token).then(JSON.parse).then(j => j.login).then(username => {
+		return db.collection('user').findOne({name: username}).then(user=>{
+		    return user._id
+		}).catch(err=>{
+		    let user = {name: username}
+		    return db.collection('user').insertOne(user).then(a=>{
+			return user._id
+		    })
+		})
+	    }).then(user_id => {
+		trans.user_id = user_id
+		return db.collection('block').findOne({_id: block_id}).then(block=>{
+		    trans.origin = block.origin
+		    return db.collection('trans').insert(trans)
+		}).then(a=>{
+		    let trans_id = trans._id
+		    return db.collection('block').update(
+			{_id: block_id},
+			{$addToSet: {trans_list: trans_id}}
+		    )
+		}).then(a=>{
+		    res.end(JSON.stringify(trans, null, '  '))
+		})
 	    }).catch(err=>{
 		res.status(500).end(err.message)
 	    })
@@ -262,6 +298,17 @@ function append_api_sfct(config, db){
 	    db.collection('trans').findOne({_id: trans_id}).then(trans=>{
 		res.end(JSON.stringify(trans, null, '  '))
 	    }).catch(err=>res.status(500).end(err.message))
+	}
+    })
+    app.post('/vote_trans', function(req, res){
+	if(!req.args.trans_id || !req.args.value){
+	    res.status(500).end('needs {trans_id, value}')
+	} else {
+	    let trans_id = ObjectID(req.args.trans_id)
+	    let value = req.args.value>0 ? 1 : -1
+	    db.collection('trans').updateOne({_id: trans_id}, {$inc: {vote: value}}).then(a=>{
+		res.end('ok')
+	    }).catch(err => res.status(500).end(err.message))
 	}
     })
 
