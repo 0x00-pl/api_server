@@ -224,7 +224,7 @@ function append_api_sfct(config, db){
 			let chapter_id = ObjectID(block.chapter_id)
 			let block_id = block._id
 			db.collection('chapter')
-			    .update(
+			    .updateOne(
 				{_id: chapter_id},
 				{$addToSet: {block_list: block_id}},
 				function(err){
