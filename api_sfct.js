@@ -45,7 +45,7 @@ function append_api_sfct(config, db){
     // book : {name, chapter_list:[id]}
     // chapter : {book_id, name, block_list:[id]}
     // block : {chapter_id, origin, status, trans_list:[id]}
-    // trans : {block_id, user_id, vote, origin, text}
+    // trans : {user_id, vote, origin, text}
     // user : {name}
     app.post('/add_book', function(req, res){
 	let book = req.args
@@ -256,11 +256,9 @@ function append_api_sfct(config, db){
 
     app.post('/add_trans', function(req, res){
 	let trans = req.args
-	if(!trans || !trans.text){
-	    res.status(500).end('needs {block_id, text}')
+	if(!trans || !trans.text || !trans.origin){
+	    res.status(500).end('needs {origin, text}')
 	} else {
-	    let block_id = ObjectID(trans.block_id)
-	    trans.vote = 0
 	    let token = req.token
 	    call_api(oserver+'/user', req.token).then(JSON.parse).then(j => j.login).then(username => {
 		return db.collection('user').findOne({name: username}).then(user=>{
@@ -273,18 +271,16 @@ function append_api_sfct(config, db){
 		})
 	    }).then(user_id => {
 		trans.user_id = user_id
-		return db.collection('block').findOne({_id: block_id}).then(block=>{
-		    trans.origin = block.origin
-		    return db.collection('trans').insert(trans)
-		}).then(a=>{
-		    let trans_id = trans._id
-		    return db.collection('block').update(
-			{_id: block_id},
-			{$addToSet: {trans_list: trans_id}}
+		trans.vote = 0
+
+		return db.collection('trans').insert(trans).then(a=>{
+		    return db.collection('block').updateMany(
+			{origin},
+			{$addToSet: {trans_list: trans._id}}
 		    )
-		}).then(a=>{
-		    res.end(JSON.stringify(trans, null, '  '))
 		})
+	    }).then(a=>{
+		res.end(JSON.stringify(trans, null, '  '))
 	    }).catch(err=>{
 		res.status(500).end(err.message)
 	    })
