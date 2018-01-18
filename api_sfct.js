@@ -84,6 +84,11 @@ function append_api_sfct(config, db){
 	    res.status(500).end('needs {book_id} of {book_name}')
 	}
     })
+    app.post('/get_book_list', function(req, res){
+	db.collection('book').find().toArray().then(book_list=>{
+	    res.end(JSON.stringify(book_list, null, '  '))
+	}).catch(err=>res.status(500).end(err.message))
+    })
     app.post('/get_book_chapter', function(req, res){
 	function find_cb(err, book){
 	    if(err){
@@ -91,27 +96,26 @@ function append_api_sfct(config, db){
 	    } else {
 		let chapter_list = book.chapter_list
 		db.collection('chapter')
-		    .find({_id: {$in: chapter_list}})
-		    .toArray(function(err, chapter_list){
+                    .find({_id: {$in: chapter_list}})
+                    .toArray(function(err, chapter_list){
 			book.chapter_list = chapter_list
 			res.end(JSON.stringify(book, null, '  '))
-		    })
-	    }
+                    })
+            }
 	}
 
 	let db_book = db.collection('book')
 	if(req.args.book_name){
-	    let book_name = req.args.book_name
-	    db_book.findOne({name: book_name}, find_cb)
+            let book_name = req.args.book_name
+            db_book.findOne({name: book_name}, find_cb)
 	} else if(req.args.book_id){
-	    let book_id = ObjectID(req.args.book_id)
-	    db_book.findOne({_id: book_id}, find_cb)
+            let book_id = ObjectID(req.args.book_id)
+            db_book.findOne({_id: book_id}, find_cb)
 	} else {
-	    res.status(500).end('needs {book_id} or {book_name}')
+            res.status(500).end('needs {book_id} or {book_name}')
 	}
     })
     
-
     app.post('/add_chapter', function(req, res){
 	let chapter = req.args
 	chapter.block_list = []
@@ -274,6 +278,7 @@ function append_api_sfct(config, db){
 		trans.vote = 0
 
 		return db.collection('trans').insert(trans).then(a=>{
+		    let origin = trans.origin
 		    return db.collection('block').updateMany(
 			{origin},
 			{$addToSet: {trans_list: trans._id}}
