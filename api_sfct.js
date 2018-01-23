@@ -96,7 +96,8 @@ function append_api_sfct(config, db){
 	    } else {
 		let chapter_list = book.chapter_list
 		db.collection('chapter')
-                    .find({_id: {$in: chapter_list}}, {projection:{'block_list':0}})
+                    //.find({_id: {$in: chapter_list}}, {projection:{'block_list':0}})
+		    .find({_id: {$in: chapter_list}}, {'block_list':0}) // use mongodb 2.6 api
                     .toArray(function(err, chapter_list){
 			book.chapter_list = chapter_list
 			res.end(JSON.stringify(book, null, '  '))
