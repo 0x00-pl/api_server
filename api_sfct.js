@@ -37,9 +37,11 @@ function append_api_sfct(config, db){
 	call_api(oserver+'/user', req.token)
 	    .then(JSON.parse)
 	    .then(j => j.login)
-	    .then(username => call_api(`${oserver}/users/MarisaKirisame/following/${username}`, req.token))
-	    .then(t => res.end(t))
-	    .catch(error => res.status(500).end(error.message))
+	    .then(username => {
+		return call_api(`${oserver}/users/MarisaKirisame/following/${username}`, req.token).then(t => {
+		    return res.end(JSON.stringify({username}))
+		})
+	    }).catch(error => res.status(500).end(error.message))
     })
 
     // book : {name, chapter_list:[id]}
