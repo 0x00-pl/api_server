@@ -10,9 +10,6 @@ function try_read(filename){
     }
 }
 
-let oauth_config = ('./deployment_config/oauth.json')
-let mongodb_config = require('./deployment_config/mongodb.json')
-
 module.exports = Object.assign(
     {
 	oauth_auth: 'https://github.com/login/oauth/authorize',

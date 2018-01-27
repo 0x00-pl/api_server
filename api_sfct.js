@@ -16,7 +16,15 @@ function append_api_sfct(config){
 	    .then(j=>{
 		res.json(j)
 	    })
-	    .catch(error=>res.status(500).end(error))
+	    .catch(err=>res.status(500).end(err))
+    })
+
+    api.get('/username', function(require,res){
+	res.set('Access-Control-Allow-Origin', '*')
+	let token = req.query.token
+	call_api(oserver+'/user', token)
+	    .then(j=>res.json(j.login))
+	    .catch(err=>res.status(500).end(err))
     })
 }
 
