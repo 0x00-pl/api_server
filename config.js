@@ -17,7 +17,7 @@ module.exports = Object.assign(
 	oauth_server: 'https://api.github.com',
 	oauth_client_id: 'undefined',
 	oauth_client_secret: 'undefined',
-	mongourl: 'mongodb://localhost/test'
+	mongourl: 'mongodb://pl:publicpl@localhost/test'
     },
     try_read(path.join(__dirname, './deployment_config/oauth.json')),
     try_read(path.join(__dirname, './deployment_config/mongodb.json'))
