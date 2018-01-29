@@ -11,10 +11,6 @@ function call_api(spath, token){
 	.then(b=>b.text())
 }
 
-function get_user(token, oserver){
-    return call_api(oserver+'/user', token).then(JSON.parse)
-}
-
 function append_api_sfct(config, db){
     let app = express.Router()
     if(!db){
@@ -49,7 +45,14 @@ function append_api_sfct(config, db){
 		})
 	    }).catch(error => res.status(500).end(error.message))
     })
-
+    
+    api.get('/username', function(require,res){
+	res.set('Access-Control-Allow-Origin', '*')
+	let token = req.query.token
+	call_api(oserver+'/user', token)
+	    .then(j=>res.json(j.login))
+	    .catch(err=>res.status(500).end(err))
+    })
 
     db.collection('cache-auth').drop()  // drop old cache
     app.use((req, res, next)=>{
