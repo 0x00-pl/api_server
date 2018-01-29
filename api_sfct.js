@@ -46,7 +46,7 @@ function append_api_sfct(config, db){
 	    }).catch(error => res.status(500).end(error.message))
     })
     
-    api.get('/username', function(require,res){
+    app.get('/username', function(require,res){
 	res.set('Access-Control-Allow-Origin', '*')
 	let token = req.query.token
 	call_api(oserver+'/user', token)
