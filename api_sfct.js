@@ -60,17 +60,20 @@ function append_api_sfct(config, db){
 	    '0x00-pl': true
 	}
 	
-	// cache-auth : {username, editor, voter}
+	// cache-auth : {token, username, editor, voter}
 	let token = req.token
-	db.collection('cache-auth').findOne({token}).then(auth=>{
+	db.collection('cache-auth').findOne({_id:token}).then(auth=>{
 	    if(auth == null){ throw Error('can not found auth') }
 	    req.auth = auth
 	}).catch(err=>{
 	    return call_api(oserver+'/user', token).then(JSON.parse).then(user=>{
+		if(!user.login){
+		    throw Error('can not get user')
+		}
 		let username = user.login
 		let editor = true
 		let voter = voter_list[username] || false
-		let auth = {username, editor, voter}
+		let auth = {_id:token, username, editor, voter}
 		return db.collection('cache-auth').insertOne(auth).then(a=>req.auth=auth)
 	    })
 	}).then(a=>{
