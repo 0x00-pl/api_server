@@ -19,6 +19,13 @@ function append_api_sfct(config, db){
     }
     let oserver = config.oauth_server
 
+    app.use((req, res, next)=>{
+	try {
+	    next()
+	} catch(err){
+	    res.status(500).end(err.message)
+	}
+    })
     app.use(body_parser.text())
     app.use(function(req, res, next){
 	req.token = req.query.token

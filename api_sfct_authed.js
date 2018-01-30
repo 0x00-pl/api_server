@@ -9,8 +9,6 @@ function append_api_sfct_authed(app, db, config){
 	console.log('[error][sfct]: db is not avalible.')
 	return app
     }
-    let oserver = config.oauth_server
-
     
     // book : {name, chapter_list:[id]}
     // chapter : {book_id, name, block_list:[id]}
@@ -38,7 +36,7 @@ function append_api_sfct_authed(app, db, config){
 	    if(err){
 		res.status(500).end(err.message)
 	    } else {
-		res.end(JSON.stringify(book, null, ' '))
+		res.end(JSON.stringify(book, null, '  '))
 	    }
 	}
 	let db_book = db.collection('book')
