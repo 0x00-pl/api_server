@@ -10,7 +10,7 @@ function append_api_sfct_cache(app, db, config){
 	return app
     }
 
-    // cache-trans-refed
+    // cache-trans-refed : {_id=trans._id, refed}
     app.post('/cache-trans-refed', (req, res)=>{
 	db.collection('cache-trans-refed').drop().then(a=>{
 	    return db.collection('trans', db.version()==2.6 ? {_id:1} : {projection:{_id:1}}).find().toArray()
@@ -22,6 +22,8 @@ function append_api_sfct_cache(app, db, config){
 	    )
 	}).then(cache_trans_refed_list=>{
 	    return db.collection('cache-trans-refed').insertMany(cache_trans_refed_list)
+	}).then(a=>{
+	    res.end('ok')
 	})
     })
     app.post('/get-trans-refed', (req, res)=>{
@@ -29,6 +31,23 @@ function append_api_sfct_cache(app, db, config){
 	trans_list = trans_list.map(trans_id=>ObjectID(trans_id))
 	db.collection('cache-trans-refed').find({_id: {$in: trans_list}}).toArray(trans_refed_list=>{
 	    res.end(JSON.stringify(trans_refed_list, null, '  '))
+	})
+    })
+
+    // cache-block-transed : {_id=block._id, transed}
+    app.post('/cache-block-transed', (req, res)=>{
+	db.collection('cache-block-transed').drop().then(a=>{
+	    return db.collection('block').find().toArray()
+	}).then(block_list=>{
+	    return block_list.map(block=>{
+		return db.collection('trans').findOne({_id:{$in:block.trans_list}, vote:{$gt:0}}).then(t=>{
+		    return {_id:block._id, transed: t!=null}
+		})
+	    })
+	}).then(Promise.all).then(block_transed_list=>{
+	    return db.collection('chahe-block-transed').insertMany(block_transed_list)
+	}).then(a=>{
+	    res.end('ok')
 	})
     })
     
