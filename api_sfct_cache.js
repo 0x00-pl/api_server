@@ -13,7 +13,7 @@ function append_api_sfct_cache(app, db, config){
     // cache-trans-refed : {_id=trans._id, refed}
     app.post('/cache-trans-refed', (req, res)=>{
 	db.collection('cache-trans-refed').remove({}).then(a=>{
-	    return db.collection('trans').find({}, db.version()==2.6 ? {_id:1} : {projection:{_id:1}}).toArray()
+	    return db.collection('trans').find({}, {_id:1}).toArray()
 	}).then(Promise.all).then(trans_list=>{
 	    return trans_list.map(trans=>{
 		return db.collection('block').count({trans_list: trans._id}).then(n=>({_id:trans._id, refed:n}))
