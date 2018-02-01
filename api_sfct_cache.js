@@ -17,7 +17,7 @@ function append_api_sfct_cache(app, db, config){
 	}).then(trans_list=>{
 	    return Promise.all(
 		trans_list.map(trans_id=>{
-		    return db.collection('block').count({trans_list: trans_id}).then(n=>{_id:trans_id, refed:n})
+		    return db.collection('block').count({trans_list: trans_id}).then(n=>({_id:trans_id, refed:n}))
 		})
 	    )
 	}).then(cache_trans_refed_list=>{
