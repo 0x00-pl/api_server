@@ -13,14 +13,12 @@ function append_api_sfct_cache(app, db, config){
     // cache-trans-refed : {_id=trans._id, refed}
     app.post('/cache-trans-refed', (req, res)=>{
 	db.collection('cache-trans-refed').drop().then(a=>{
-	    return db.collection('trans', db.version()==2.6 ? {_id:1} : {projection:{_id:1}}).find().toArray()
-	}).then(trans_list=>{
-	    return Promise.all(
-		trans_list.map(trans_id=>{
-		    return db.collection('block').count({trans_list: trans_id}).then(n=>({_id:trans_id, refed:n}))
-		})
-	    )
-	}).then(cache_trans_refed_list=>{
+	    return db.collection('trans').find({}, db.version()==2.6 ? {_id:1} : {projection:{_id:1}}).toArray()
+	}).then(Promise.all).then(trans_list=>{
+	    return trans_list.map(trans=>{
+		return db.collection('block').count({trans_list: trans._id}).then(n=>({_id:trans._id, refed:n}))
+	    })
+	}).then(Promise.all).then(cache_trans_refed_list=>{
 	    return db.collection('cache-trans-refed').insertMany(cache_trans_refed_list)
 	}).then(a=>{
 	    res.end('ok')
