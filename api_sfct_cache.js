@@ -23,7 +23,7 @@ function append_api_sfct_cache(app, db, config){
 	}).then(p=>Promise.all(p)).then(cache_trans_refed_list=>{
 	    return db.collection('cache-trans-refed').insertMany(cache_trans_refed_list)
 	}).then(a=>{
-	    res.end('ok')
+	    res.end('{"ok":true}')
 	})
     })
     app.post('/get-trans-refed', (req, res)=>{
@@ -47,7 +47,7 @@ function append_api_sfct_cache(app, db, config){
 	}).then(Promise.all).then(block_transed_list=>{
 	    return db.collection('chahe-block-transed').insertMany(block_transed_list)
 	}).then(a=>{
-	    res.end('ok')
+	    res.end('{"ok":true}')
 	})
     })
     app.post('/get-block-transed', (req, res)=>{
