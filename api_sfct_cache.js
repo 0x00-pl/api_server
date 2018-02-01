@@ -12,7 +12,7 @@ function append_api_sfct_cache(app, db, config){
 
     // cache-trans-refed : {_id=trans._id, refed}
     app.post('/cache-trans-refed', (req, res)=>{
-	db.collection('cache-trans-refed').drop().then(a=>{
+	db.collection('cache-trans-refed').remove({}).then(a=>{
 	    return db.collection('trans').find({}, db.version()==2.6 ? {_id:1} : {projection:{_id:1}}).toArray()
 	}).then(Promise.all).then(trans_list=>{
 	    return trans_list.map(trans=>{
