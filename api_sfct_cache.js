@@ -29,7 +29,7 @@ function append_api_sfct_cache(app, db, config){
     app.post('/get-trans-refed', (req, res)=>{
 	let trans_list = req.args.trans_list || [req.args.trans_id]
 	trans_list = trans_list.map(trans_id=>ObjectID(trans_id))
-	db.collection('cache-trans-refed').find({_id: {$in: trans_list}}).toArray(trans_refed_list=>{
+	db.collection('cache-trans-refed').find({_id: {$in: trans_list}}).toArray().then(trans_refed_list=>{
 	    res.end(JSON.stringify(trans_refed_list, null, '  '))
 	})
     })
@@ -48,6 +48,26 @@ function append_api_sfct_cache(app, db, config){
 	    return db.collection('chahe-block-transed').insertMany(block_transed_list)
 	}).then(a=>{
 	    res.end('ok')
+	})
+    })
+    app.post('/get-block-transed', (req, res)=>{
+	let block_list = req.args.block_list || [req.args.block_id]
+	block_list = block_list.map(block_id=>ObjectID(block_id))
+	db.collection('cache-block-transed').find({_id: {$in: block_list}}).toArray().then(block_transed_list=>{
+	    res.end(JSON.stringify(block_transed_list, null, '  '))
+	})
+    })
+    app.post('/get-chapter-transed', (req, res)=>{
+	let chapter_list = req.args.chapter_list || [req.args.chapter_id]
+	chapter_list = chapter_list.map(chapter_id=>ObjectID(chapter_id))
+	db.collection('chapter').find({_id: {$in: chapter_list}}).toArray().then(chapter_list=>{
+	    return chapter_list.map(chapter=>{
+		return db.collection('cache-block-transed').count({_id: {$in: chapter.block_list}, transed:true}).then(n=>{
+		    return {chapter_id: chapter._id, block_count: chapter.block_list.length, transed_count: n}
+		})
+	    })
+	}).then(Promise.all).then(chapter_transed_list=>{
+	    res.end(JSON.stringify(chapter_transed_list, null, '  '))
 	})
     })
     

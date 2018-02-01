@@ -4,6 +4,7 @@ let body_parser = require('body-parser')
 let { Promise } = require('es6-promise')
 let { ObjectID } = require('mongodb')
 let append_api_sfct_authed = require('./api_sfct_authed.js')
+let append_api_sfct_cache = require('./api_sfct_cache.js')
 
 function call_api(spath, token){
     console.log('[debug]:call_api: ', spath)
@@ -89,9 +90,10 @@ function append_api_sfct(config, db){
 	    res.status(500).end(err.message)
 	})
     })
- 
-   append_api_sfct_authed(app, db, config)
-    
+
+    append_api_sfct_authed(app, db, config)
+    append_api_sfct_cache(app, db, config)
+
     return app
 }
 
