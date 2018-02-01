@@ -73,3 +73,5 @@ function append_api_sfct_cache(app, db, config){
     
     return app
 }
+
+module.exports = append_api_sfct_cache
