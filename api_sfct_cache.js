@@ -45,7 +45,7 @@ function append_api_sfct_cache(app, db, config){
 		})
 	    })
 	}).then(Promise.all.bind(Promise)).then(block_transed_list=>{
-	    return db.collection('chahe-block-transed').insertMany(block_transed_list)
+	    return db.collection('cache-block-transed').insertMany(block_transed_list)
 	}).then(a=>{
 	    res.end('{"ok":true}')
 	})
