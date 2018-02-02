@@ -14,7 +14,7 @@ function append_api_sfct_cache(app, db, config){
     app.post('/cache-trans-refed', (req, res)=>{
 	db.collection('cache-trans-refed').remove({}).then(a=>{
 	    return db.collection('trans').find({}, {_id:1}).toArray()
-	}).then(p=>Promise.all(p)).then(trans_list=>{
+	}).then(trans_list=>{
 	    return trans_list.map(trans=>{
 		return db.collection('block').count({trans_list: trans._id}).then(n=>{
 		    return {_id:trans._id, refed:n}
@@ -36,7 +36,7 @@ function append_api_sfct_cache(app, db, config){
 
     // cache-block-transed : {_id=block._id, transed}
     app.post('/cache-block-transed', (req, res)=>{
-	db.collection('cache-block-transed').drop().then(a=>{
+	db.collection('cache-block-transed').remove({}).then(a=>{
 	    return db.collection('block').find().toArray()
 	}).then(block_list=>{
 	    return block_list.map(block=>{
@@ -44,7 +44,7 @@ function append_api_sfct_cache(app, db, config){
 		    return {_id:block._id, transed: t!=null}
 		})
 	    })
-	}).then(Promise.all).then(block_transed_list=>{
+	}).then(Promise.all.bind(Promise)).then(block_transed_list=>{
 	    return db.collection('chahe-block-transed').insertMany(block_transed_list)
 	}).then(a=>{
 	    res.end('{"ok":true}')
