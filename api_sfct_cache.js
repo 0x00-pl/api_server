@@ -66,7 +66,7 @@ function append_api_sfct_cache(app, db, config){
 		    return {chapter_id: chapter._id, block_count: chapter.block_list.length, transed_count: n}
 		})
 	    })
-	}).then(Promise.all).then(chapter_transed_list=>{
+	}).then(Promise.all.bind(Promise)).then(chapter_transed_list=>{
 	    res.end(JSON.stringify(chapter_transed_list, null, '  '))
 	})
     })
