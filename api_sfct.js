@@ -42,25 +42,7 @@ function append_api_sfct(config, db){
     app.post('/user', function(req, res){
 	call_api(oserver+'/user', req.token).then(JSON.parse).then(j => res.end(JSON.stringify(j, null, '  '))).catch(err => res.status(500).end(err.message))
     })
-    // TODO: remove old api
-    app.post('/auth', function(req, res){
-	call_api(oserver+'/user', req.token)
-	    .then(JSON.parse)
-	    .then(j => j.login)
-	    .then(username => {
-		return call_api(`${oserver}/users/MarisaKirisame/following/${username}`, req.token).then(t => {
-		    return res.end(JSON.stringify({username}))
-		})
-	    }).catch(error => res.status(500).end(error.message))
-    })
     
-    app.get('/username', function(require,res){
-	res.set('Access-Control-Allow-Origin', '*')
-	let token = req.query.token
-	call_api(oserver+'/user', token)
-	    .then(j=>res.json(j.login))
-	    .catch(err=>res.status(500).end(err))
-    })
 
     db.collection('cache-auth').drop()  // drop old cache
     app.use((req, res, next)=>{
@@ -89,6 +71,12 @@ function append_api_sfct(config, db){
 	}).catch(err=>{
 	    res.status(500).end(err.message)
 	})
+    })
+    app.post('/auth', (req, res)=>{
+	res.end(JSON.stringify(req.auth, null, '  '))
+    })
+    app.post('/username', (req, res)=>{
+	res.end(JSON.stringify(req.username))
     })
 
     append_api_sfct_authed(app, db, config)
