@@ -7,7 +7,7 @@ let append_api_sfct_authed = require('./api_sfct_authed.js')
 let append_api_sfct_cache = require('./api_sfct_cache.js')
 
 function call_api(spath, token){
-    console.log('[debug]:call_api: ', spath)
+    console.log('[debug]:call_github_api: ', spath)
     return fetch(spath, {headers: {'Authorization': 'token '+token}})
 	.then(b=>b.text())
 }
@@ -30,7 +30,11 @@ function append_api_sfct(config, db){
     app.use(body_parser.text())
     app.use(function(req, res, next){
 	req.token = req.query.token
-	req.args = JSON.parse(req.body)
+	if(typeof req.body != 'string'){
+	    req.args = {}
+	} else {
+	    req.args = JSON.parse(req.body)
+	}
 	res.set('Access-Control-Allow-Origin', '*')
 	next()
     })

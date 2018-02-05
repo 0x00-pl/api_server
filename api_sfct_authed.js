@@ -12,7 +12,7 @@ function append_api_sfct_authed(app, db, config){
     
     // book : {name, chapter_list:[id]}
     // chapter : {book_id, name, block_list:[id]}
-    // block : {chapter_id, origin, status, trans_list:[id]}
+    // block : {chapter_id, origin, trans_list:[id]}
     // trans : {user_id, vote, origin, text}
     // user : {name}
     app.post('/add_book', function(req, res){
