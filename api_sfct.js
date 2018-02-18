@@ -6,6 +6,14 @@ let { ObjectID } = require('mongodb')
 let append_api_sfct_authed = require('./api_sfct_authed.js')
 let append_api_sfct_cache = require('./api_sfct_cache.js')
 
+function get_with_default(obj, prop, _default){
+    if(prop in obj){
+	return pbj[prop]
+    } else {
+	return _default
+    }
+}
+
 function call_api(spath, token){
     console.log('[debug]:call_github_api: ', spath)
     return fetch(spath, {headers: {'Authorization': 'token '+token}})
@@ -50,9 +58,7 @@ function append_api_sfct(config, db){
 
     db.collection('cache-auth').drop()  // drop old cache
     app.use((req, res, next)=>{
-	let voter_list = {
-	    '0x00-pl': true
-	}
+	let { voter_list, editor_list } = require('./api_sfct_auth_list.js')
 	
 	// cache-auth : {token, username, editor, voter}
 	let token = req.token
@@ -65,8 +71,8 @@ function append_api_sfct(config, db){
 		    throw Error('can not get user')
 		}
 		let username = user.login
-		let editor = true
-		let voter = voter_list[username] || false
+		let editor = get_with_default(editor_list, username, true)
+		let voter = get_with_default(voter_list, username, false)
 		let auth = {_id:token, username, editor, voter}
 		return db.collection('cache-auth').insertOne(auth).then(a=>req.auth=auth)
 	    })
