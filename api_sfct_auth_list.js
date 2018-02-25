@@ -1,5 +1,5 @@
 module.exports = {
-    vote_list: {
+    voter_list: {
 	'0x00-pl': true,
 	'jamie12221': true,
 	'luochen1990': true,
