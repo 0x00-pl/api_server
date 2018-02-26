@@ -8,7 +8,7 @@ let append_api_sfct_cache = require('./api_sfct_cache.js')
 
 function get_with_default(obj, prop, _default){
     if(prop in obj){
-	return pbj[prop]
+	return obj[prop]
     } else {
 	return _default
     }
